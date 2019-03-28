@@ -1,5 +1,7 @@
 import requests
+import re
 from bs4 import BeautifulSoup
+
 
 
 def search_for_date(id): # функция которая ищет дату создания петиции по ее ID
@@ -25,10 +27,8 @@ def search_for_date(id): # функция которая ищет дату со�
         return date_list[-1]
 
 def main():
-        ID = str(226273)
-        URL = 'https://www.petitions247.com/'+ str(ID) +'?a=2'
-        data = {'petition_id:' + ID + ','
-                'page_view_id': '1',
+        URL = input('Введите URL петиции ')
+        data = {'page_view_id': '1',
                 'time_until_page_fully_loaded': '1409',
                 'authenticity_token': '5d2260b26c691988588e9295043b4237'
                 }
@@ -36,9 +36,18 @@ def main():
         response = requests.get(URL, data)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        title = soup.title.get_text()  # заголовок петиции
+        # ID петиции
+        ID = soup.find_all(class_='btn btn-block btn-social btn-facebook facebook_share_button')
+        ID = str(ID[0])
+        ID = ID.split()
+        ID = re.findall('(\d+)', ID[7])
+        ID = ID[0]
 
-        full_text = soup.find_all(id='petition_text')[0].get_text()  #полный текст петиции
+        # заголовок петиции
+        title = soup.title.get_text()
+
+        # полный текст петиции
+        full_text = soup.find_all(id='petition_text')[0].get_text()
 
         # имя автора петиции
         author_text = soup.find_all(id='contact_person')[0].get_text()
@@ -48,10 +57,8 @@ def main():
         author_name = ' '.join(author_list)
 
         # дата петиции
-
-
         date = search_for_date(ID)
 
-        print(date)
+ #       print(date)
 
 main()
