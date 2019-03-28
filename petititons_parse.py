@@ -19,10 +19,24 @@ def search_for_date(id): # функция которая ищет дату со�
                                 date_str_htm = pet_str
                 if date_str_htm == '':
                         page_num += 1
+                        date_list = []
                 else:
                         date_str = BeautifulSoup(date_str_htm,'lxml').text
                         date_list = date_str.split()
                         page_num = 21
+                if date_list == []:
+                        page_list = soup.find_all(class_='even')
+                        for petition in page_list:
+                                pet_str = str(petition)
+                                if str(ID) in pet_str:
+                                        date_str_htm = pet_str
+                        if date_str_htm == '':
+                                page_num += 1
+                                date_list = []
+                        else:
+                                date_str = BeautifulSoup(date_str_htm, 'lxml').text
+                                date_list = date_str.split()
+                                page_num = 21
 
         return date_list[-1]
 
@@ -59,6 +73,6 @@ def main():
         # дата петиции
         date = search_for_date(ID)
 
- #       print(date)
+        print(date)
 
 main()
