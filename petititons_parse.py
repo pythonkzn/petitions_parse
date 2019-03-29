@@ -4,7 +4,8 @@ from bs4 import BeautifulSoup
 import json
 import codecs
 
-def search_for_date(id): # функция которая ищет дату создания петиции по ее ID
+
+def search_for_date(id):  # функция которая ищет дату создания петиции по ее ID
         date_str_htm = ''
         page_num = 1
         ID = id
@@ -40,6 +41,7 @@ def search_for_date(id): # функция которая ищет дату со�
 
         return date_list[-1]
 
+
 def search_for_id(soup_in):
         ID = soup_in.find_all(class_='btn btn-block btn-social btn-facebook facebook_share_button')
         ID = str(ID[0])
@@ -48,6 +50,7 @@ def search_for_id(soup_in):
         ID = ID[0]
         return ID
 
+
 def search_for_author(soup_in):
         author_text = soup_in.find_all(id='contact_person')[0].get_text()
         author_list = author_text.split()
@@ -55,6 +58,7 @@ def search_for_author(soup_in):
                 author_list.pop()
         author_name_out = ' '.join(author_list)
         return author_name_out
+
 
 def seacrh_for_signs(soup_in):
         sign_count_out_2 = ['']
@@ -67,6 +71,7 @@ def seacrh_for_signs(soup_in):
         sign_count_out = sign_count_out_1[0] + sign_count_out_2[0]
         return sign_count_out
 
+
 def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_count_in):
         out_dict = {'ID': id_in,
                     'Title': title_in,
@@ -78,6 +83,7 @@ def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_cou
                 json.dump(out_dict, json_file, ensure_ascii=False)
         return out_dict
 
+
 def main():
         URL = input('Введите URL петиции ')
         data = {'page_view_id': '1',
@@ -88,13 +94,12 @@ def main():
         response = requests.get(URL, data)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-
         id = search_for_id(soup)  # ID петиции
-        title = soup.title.get_text() # заголовок петиции
+        title = soup.title.get_text()  # заголовок петиции
         full_text = soup.find_all(id='petition_text')[0].get_text().split('\n')  # полный текст петиции
         author_name = search_for_author(soup)  # имя автора петиции
         date = search_for_date(id)  # дата петиции
-        sign_count = seacrh_for_signs(soup)  #  количество подписавших
+        sign_count = seacrh_for_signs(soup)  # количество подписавших
 
         if __name__ == "__main__":
                 out_data = exp_to_json(id, title, full_text, author_name, date, sign_count)
