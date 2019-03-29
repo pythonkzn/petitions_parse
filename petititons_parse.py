@@ -1,8 +1,8 @@
 import requests
 import re
 from bs4 import BeautifulSoup
-
-
+import json
+import codecs
 
 def search_for_date(id): # функция которая ищет дату создания петиции по ее ID
         date_str_htm = ''
@@ -40,6 +40,44 @@ def search_for_date(id): # функция которая ищет дату со�
 
         return date_list[-1]
 
+def search_for_id(soup_in):
+        ID = soup_in.find_all(class_='btn btn-block btn-social btn-facebook facebook_share_button')
+        ID = str(ID[0])
+        ID = ID.split()
+        ID = re.findall('(\d+)', ID[7])
+        ID = ID[0]
+        return ID
+
+def search_for_author(soup_in):
+        author_text = soup_in.find_all(id='contact_person')[0].get_text()
+        author_list = author_text.split()
+        for i in range (0,4):
+                author_list.pop()
+        author_name_out = ' '.join(author_list)
+        return author_name_out
+
+def seacrh_for_signs(soup_in):
+        sign_count_out_2 = ['']
+        sign_count = soup_in.find_all(class_='signatureAmount badge badge-primary')
+        sign_count = str(sign_count[0])
+        sign_count_out = sign_count.split()
+        sign_count_out_1 = re.findall('(\d+)', sign_count_out[3])
+        if (len(sign_count_out) > 4):  # если количество подписей меньше 1000 то не будет этого параметра
+                sign_count_out_2 = re.findall('(\d+)', sign_count_out[4])
+        sign_count_out = sign_count_out_1[0] + sign_count_out_2[0]
+        return sign_count_out
+
+def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_count_in):
+        out_dict = {'ID': id_in,
+                    'Title': title_in,
+                    'Text': full_text_in,
+                    'Author': author_name_in,
+                    'Date': date_in,
+                    'Number of signs': sign_count_in}
+        with codecs.open('output.json', 'w', encoding='utf-8') as json_file:
+                json.dump(out_dict, json_file, ensure_ascii=False)
+        return out_dict
+
 def main():
         URL = input('Введите URL петиции ')
         data = {'page_view_id': '1',
@@ -50,29 +88,16 @@ def main():
         response = requests.get(URL, data)
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # ID петиции
-        ID = soup.find_all(class_='btn btn-block btn-social btn-facebook facebook_share_button')
-        ID = str(ID[0])
-        ID = ID.split()
-        ID = re.findall('(\d+)', ID[7])
-        ID = ID[0]
 
-        # заголовок петиции
-        title = soup.title.get_text()
+        id = search_for_id(soup)  # ID петиции
+        title = soup.title.get_text() # заголовок петиции
+        full_text = soup.find_all(id='petition_text')[0].get_text().split('\n')  # полный текст петиции
+        author_name = search_for_author(soup)  # имя автора петиции
+        date = search_for_date(id)  # дата петиции
+        sign_count = seacrh_for_signs(soup)  #  количество подписавших
 
-        # полный текст петиции
-        full_text = soup.find_all(id='petition_text')[0].get_text()
-
-        # имя автора петиции
-        author_text = soup.find_all(id='contact_person')[0].get_text()
-        author_list = author_text.split()
-        for i in range (0,4):
-                author_list.pop()
-        author_name = ' '.join(author_list)
-
-        # дата петиции
-        date = search_for_date(ID)
-
-        print(date)
+        if __name__ == "__main__":
+                out_data = exp_to_json(id, title, full_text, author_name, date, sign_count)
+                print (out_data)
 
 main()
