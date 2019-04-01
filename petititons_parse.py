@@ -96,7 +96,7 @@ def get_author_id(url, author_name_in):
         signs_page = signs_page.split()
         auth_name = signs_page[6] + ' ' + signs_page[7]  # имя автора первого подписанта петиции
         if len(auth_name) > 10:  # обходим случай когда первый подписавший зареген на сайте
-                if auth_name.find(author_name_in):
+                if auth_name.find(author_name_in) != -1:
                         auth_id = re.findall('(\d+)', signs_page[2])[0]
                 else:
                         auth_id = author_name_in
