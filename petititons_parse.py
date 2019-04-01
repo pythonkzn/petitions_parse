@@ -72,16 +72,30 @@ def seacrh_for_signs(soup_in):
         return sign_count_out
 
 
-def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_count_in):
+def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_count_in, author_id_in):
         out_dict = {'ID': id_in,
                     'Title': title_in,
                     'Text': full_text_in,
                     'Author': author_name_in,
                     'Date': date_in,
-                    'Number of signs': sign_count_in}
+                    'Number of signs': sign_count_in,
+                    'Author ID': author_id_in}
         with codecs.open('output.json', 'w', encoding='utf-8') as json_file:
                 json.dump(out_dict, json_file, ensure_ascii=False)
         return out_dict
+
+
+def get_author_id(url):
+        url_p_1 = url[0:29]
+        url_p_2 = 'signatures/' + url[29:]
+        url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
+        response = requests.get(url_signs)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        signs_page = soup.find_all('tr')
+        signs_page = str(signs_page[2])
+        signs_page = signs_page.split()
+        signs_page = re.findall('(\d+)', signs_page[2])[0]
+        return signs_page
 
 
 def main():
@@ -100,9 +114,9 @@ def main():
         author_name = search_for_author(soup)  # имя автора петиции
         date = search_for_date(id)  # дата петиции
         sign_count = seacrh_for_signs(soup)  # количество подписавших
+        author_id = get_author_id(URL)
+        out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
+        print (out_data)
 
-        if __name__ == "__main__":
-                out_data = exp_to_json(id, title, full_text, author_name, date, sign_count)
-                print (out_data)
-
-main()
+if __name__ == "__main__":
+        main()
