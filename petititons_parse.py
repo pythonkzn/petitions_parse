@@ -85,7 +85,7 @@ def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_cou
         return out_dict
 
 
-def get_author_id(url):
+def get_author_id(url, author_name_in):
         url_p_1 = url[0:29]
         url_p_2 = 'signatures/' + url[29:]
         url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
@@ -94,9 +94,20 @@ def get_author_id(url):
         signs_page = soup.find_all('tr')
         signs_page = str(signs_page[2])
         signs_page = signs_page.split()
-        signs_page = re.findall('(\d+)', signs_page[2])[0]
-        return signs_page
-
+        auth_name = signs_page[6] + ' ' + signs_page[7]  # имя автора первого подписанта петиции
+        if len(auth_name) > 10:  # обходим случай когда первый подписавший зареген на сайте
+                if auth_name.find(author_name_in):
+                        auth_id = re.findall('(\d+)', signs_page[2])[0]
+                else:
+                        auth_id = author_name_in
+        else:
+                auth_name = signs_page[4] + ' ' + signs_page[5]
+                p = auth_name.find(author_name_in)
+                if auth_name.find(author_name_in) != -1:
+                        auth_id = re.findall('(\d+)', signs_page[2])[0]
+                else:
+                        auth_id = author_name_in
+        return auth_id
 
 def main():
         URL = input('Введите URL петиции ')
@@ -114,7 +125,7 @@ def main():
         author_name = search_for_author(soup)  # имя автора петиции
         date = search_for_date(id)  # дата петиции
         sign_count = seacrh_for_signs(soup)  # количество подписавших
-        author_id = get_author_id(URL)
+        author_id = get_author_id(URL, author_name)
         out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
         print (out_data)
 
