@@ -5,39 +5,14 @@ import json
 import codecs
 
 
-def search_for_date(id):  # функция которая ищет дату создания петиции по ее ID
-        date_str_htm = ''
-        page_num = 1
-        ID = id
-        while page_num <= 20:
-                URL = 'https://www.petitions247.com/browse.php?page='+ str(page_num) +'&order_by=last_signed&sort_order=desc'
-                response = requests.get(URL)
-                soup = BeautifulSoup(response.text, 'html.parser')
-                page_list = soup.find_all(class_='odd')
-                for petition in page_list:
-                        pet_str = str(petition)
-                        if str(ID) in pet_str:
-                                date_str_htm = pet_str
-                if date_str_htm == '':
-                        page_num += 1
-                        date_list = []
-                else:
-                        date_str = BeautifulSoup(date_str_htm,'lxml').text
-                        date_list = date_str.split()
-                        page_num = 21
-                if date_list == []:
-                        page_list = soup.find_all(class_='even')
-                        for petition in page_list:
-                                pet_str = str(petition)
-                                if str(ID) in pet_str:
-                                        date_str_htm = pet_str
-                        if date_str_htm == '':
-                                page_num += 1
-                                date_list = []
-                        else:
-                                date_str = BeautifulSoup(date_str_htm, 'lxml').text
-                                date_list = date_str.split()
-                                page_num = 21
+def search_for_date(url):  # функция которая ищет дату создания петиции по ее ID
+        url_p_1 = url[0:29]
+        url_p_2 = 'signatures/' + url[29:]
+        url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
+        response = requests.get(url_signs)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        date_list = soup.find(class_='odd')
+        date_list = date_list.text.split()
 
         return date_list[-1]
 
@@ -97,7 +72,6 @@ def get_author_id(url, author_name_in):
         auth_name = signs_page[6] + ' ' + signs_page[7]  # имя автора первого подписанта петиции
         if len(auth_name) > 10:  # обходим случай когда первый подписавший зареген на сайте
                 p = auth_name.count(author_name_in.split()[0])
-                print('p')
                 if auth_name.count(author_name_in.split()[0]) == 1:
                         auth_id = re.findall('(\d+)', signs_page[2])[0]
                 else:
@@ -110,6 +84,17 @@ def get_author_id(url, author_name_in):
                 else:
                         auth_id = author_name_in
         return auth_id
+
+
+def get_comments():
+        url_p_1 = url[0:29]
+        url_p_2 = 'signatures/' + url[29:]
+        url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
+        response = requests.get(url_signs)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+
+
 
 def main():
         URL = input('Введите URL петиции ')
@@ -125,7 +110,7 @@ def main():
         title = soup.title.get_text()  # заголовок петиции
         full_text = soup.find_all(id='petition_text')[0].get_text().split('\n')  # полный текст петиции
         author_name = search_for_author(soup)  # имя автора петиции
-        date = search_for_date(id)  # дата петиции
+        date = search_for_date(URL)  # дата петиции
         sign_count = seacrh_for_signs(soup)  # количество подписавших
         author_id = get_author_id(URL, author_name)
         out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
