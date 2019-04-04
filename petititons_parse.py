@@ -1,9 +1,11 @@
 import requests
-import re
 from bs4 import BeautifulSoup
 import json
 import codecs
-
+from pprint import pprint
+import re
+from itertools import chain
+import sys
 
 def search_for_date(url):  # функция которая ищет дату создания петиции по ее ID
         url_p_1 = url[0:29]
@@ -86,14 +88,62 @@ def get_author_id(url, author_name_in):
         return auth_id
 
 
-def get_comments():
+def get_votes(url, id):
+        comment_list = []
+        page_num = 1
         url_p_1 = url[0:29]
-        url_p_2 = 'signatures/' + url[29:]
+        url_p_2 = 'signatures.php?tunnus=' + id + '&page_number='+ str(page_num) +'&num_rows=10&a=2'
         url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
         response = requests.get(url_signs)
         soup = BeautifulSoup(response.text, 'html.parser')
-        
+        max_page_num = soup.find_all(class_='pagination flex-wrap')[0].text.split()[-2]
+        print('Обработка страницы номер {}'.format(page_num))
+        table_tag = str(soup.find('tbody'))  # получили таблицу с подписями
+        soup_sub = BeautifulSoup(table_tag, 'lxml')
+        td_tag = soup_sub.find_all('td') # получили список значений ячеек таблицы
+        output_list = [[]]
+        i = 0  # счетчик строк
+        j = 0  # счетчик ячеек в строке
+        y = 0  # счетчик общего количества ячеек
+        while y <= (len(td_tag)-1):
+             if (y > 0) and (y % 5 == 0):
+                     i += 1
+                     output_list.append([])
+             output_list[i].append(td_tag[y].text)
+             y += 1
+        comment_list.append(output_list)
+        while page_num < int(max_page_num):
+                page_num += 1
+                url_p_2 = 'signatures.php?tunnus=' + id + '&page_number=' + str(page_num) + '&num_rows=10&a=2'
+                url_signs = url_p_1 + url_p_2
+                response = requests.get(url_signs)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                print('Обработка страницы номер {}'.format(page_num))
+                table_tag = str(soup.find('tbody'))  # получили таблицу с подписями
+                soup_sub = BeautifulSoup(table_tag, 'lxml')
+                td_tag = soup_sub.find_all('td')  # получили список значений ячеек таблицы
+                output_list = [[]]
+                i = 0  # счетчик строк
+                j = 0  # счетчик ячеек в строке
+                y = 0  # счетчик общего количества ячеек
+                while y <= (len(td_tag) - 1):
+                        if (y > 0) and (y % 5 == 0):
+                                i += 1
+                                output_list.append([])
+                        output_list[i].append(td_tag[y].text)
+                        y += 1
+                comment_list.append(output_list)
+        comment_list = list(chain.from_iterable(comment_list))
+        return comment_list
 
+def get_comments(votes_list):
+        comments_out = []
+        for item in votes_list:
+                if item[3] != '':
+                        comments_out.append(item)
+        with open('comments.json', 'w', encoding='utf8') as json_file:
+                json.dump(comments_out, json_file, ensure_ascii=False)
+        return comments_out
 
 
 def main():
@@ -114,7 +164,18 @@ def main():
         sign_count = seacrh_for_signs(soup)  # количество подписавших
         author_id = get_author_id(URL, author_name)
         out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
-        print (out_data)
+        pprint (out_data)
+
+        in_com = input('Если необходимо собрать комментарии к петиции и список проголосовавших нажмите Y, если нет - Q  ')
+        if in_com =='Y':
+                voted_list = get_votes(URL, id)  # проголосовавшие
+                comments = get_comments(voted_list)  # комментарии к петиции
+                pprint(comments)
+        elif in_com =='Q':
+                sys.exit(0)
+        else:
+                print('Вы ввели неверную команду')
+
 
 if __name__ == "__main__":
         main()
