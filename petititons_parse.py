@@ -91,9 +91,9 @@ def get_author_id(url, author_name_in):
 def get_votes(url, id):
         comment_list = []
         page_num = 1
-        url_p_1 = url[0:29]
-        url_p_2 = 'signatures.php?tunnus=' + id + '&page_number='+ str(page_num) +'&num_rows=10&a=2'
-        url_signs = url_p_1 + url_p_2  # URL страницы с подписями петиции
+        url_p_1 = url[:29]
+        url_p_2 = url[29:-5]
+        url_signs = url_p_1 +  'signatures.php?tunnus=' + url_p_2 + '&page_number='+ str(page_num) +'&num_rows=10&a=2' # URL страницы с подписями петиции
         response = requests.get(url_signs)
         soup = BeautifulSoup(response.text, 'html.parser')
         max_page_num = soup.find_all(class_='pagination flex-wrap')[0].text.split()[-2]
@@ -114,8 +114,9 @@ def get_votes(url, id):
         comment_list.append(output_list)
         while page_num < int(max_page_num):
                 page_num += 1
-                url_p_2 = 'signatures.php?tunnus=' + id + '&page_number=' + str(page_num) + '&num_rows=10&a=2'
-                url_signs = url_p_1 + url_p_2
+                url_p_1 = url[:29]
+                url_p_2 = url[29:-5]
+                url_signs = url_p_1 + 'signatures.php?tunnus=' + url_p_2 + '&page_number=' + str(page_num) + '&num_rows=10&a=2'  # URL страницы с подписями петиции
                 response = requests.get(url_signs)
                 soup = BeautifulSoup(response.text, 'html.parser')
                 print('Обработка страницы номер {}'.format(page_num))
