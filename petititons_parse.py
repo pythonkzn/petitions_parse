@@ -100,7 +100,7 @@ def get_votes(url, id):
         print('Обработка страницы номер {}'.format(page_num))
         table_tag = str(soup.find('tbody'))  # получили таблицу с подписями
         soup_sub = BeautifulSoup(table_tag, 'lxml')
-        td_tag = soup_sub.find_all('td') # получили список значений ячеек таблицы
+        td_tag = soup_sub.find_all('td')  # получили список значений ячеек таблицы
         output_list = [[]]
         i = 0  # счетчик строк
         j = 0  # счетчик ячеек в строке
@@ -142,6 +142,7 @@ def get_comments(votes_list):
         for item in votes_list:
                 if item[3] != '':
                         comments_out.append(item)
+                item[2] = item[2].strip()
         with open('comments.json', 'w', encoding='utf8') as json_file:
                 json.dump(comments_out, json_file, ensure_ascii=False)
         return comments_out
