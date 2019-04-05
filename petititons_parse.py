@@ -6,6 +6,8 @@ from pprint import pprint
 import re
 from itertools import chain
 import sys
+import hashlib
+
 
 def search_for_date(url):  # функция которая ищет дату создания петиции по ее ID
         url_p_1 = url[0:29]
@@ -137,12 +139,16 @@ def get_votes(url, id):
         comment_list = list(chain.from_iterable(comment_list))
         return comment_list
 
+
 def get_comments(votes_list):
         comments_out = []
         for item in votes_list:
                 if item[3] != '':
                         comments_out.append(item)
                 item[2] = item[2].strip()
+                key = item[0] + item[1] + item[4]
+                hash_line = hashlib.md5(key.encode('utf8'))
+                item.append(hash_line.hexdigest())
         with open('comments.json', 'w', encoding='utf8') as json_file:
                 json.dump(comments_out, json_file, ensure_ascii=False)
         return comments_out
