@@ -24,9 +24,6 @@ def get_all_last(date_date_in, n_in):
                 petition_href_list[0].append(a['href'])
         while page_num < int(max_page_num):
                 page_num += 1
-                if n_in != 'Q':
-                        if int(n_in) < page_num:
-                                break
                 response = requests.get('https://www.petitions247.com/browse.php?page=' + str(
                         page_num) + '&order_by=petition_created&sort_order=desc')
                 pprint('Получили список ссылок на страницу {}'.format(page_num))
@@ -54,6 +51,8 @@ def get_all_last(date_date_in, n_in):
                 except Exception as e:
                         print('Петиция закрыта и не может быть распечатана')
                 count += 1
+                if count > (int(n_in)-1):
+                        break
         return data_list_petition
 
 
@@ -232,7 +231,7 @@ def main():
 
         if in_com == '1':
                 date_in = input('Введите минимальную дату создания запрашиваемых петиций и Q если не интересует данный фильтр  ')
-                n = input('Введите по скольким страницам выгрузить последние петиции и Q если не интересует данный фильтр  ')
+                n = input('Введите количество первых петиций которые необходимо получить и Q если не интересует данный фильтр  ')
                 get_all_last(date_in, n)
         elif in_com == '2':
                 url_in = input('Введите URL петиции ')
