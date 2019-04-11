@@ -9,7 +9,7 @@ import sys
 import hashlib
 
 
-def get_all_last():
+def get_all_last(date_date_in):
         page_num = 1
         url_last = 'https://www.petitions247.com/browse.php?page=' + str(
                 page_num) + '&order_by=petition_created&sort_order=desc'
@@ -44,11 +44,15 @@ def get_all_last():
         for href in href_list:
                 try:
                         data_list_petition.append(search_by_url(href))
+                        if date_date_in != 'Q':
+                                if data_list_petition[-1]['Date'] <= date_date_in:
+                                        break
                         print('Распечатана петиция номер {}'.format(count))
                 except Exception as e:
                         print('Петиция закрыта и не может быть распечатана')
                 count += 1
         return data_list_petition
+
 
 
 
@@ -68,7 +72,7 @@ def search_by_url(url_in):
         date = search_for_date(url_in)  # дата петиции
         sign_count = seacrh_for_signs(soup)  # количество подписавших
         author_id = get_author_id(url_in, author_name)
-        out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
+        out_data = exp_to_json(id, title[:-19], full_text, author_name, date, sign_count, author_id)
         pprint (out_data)
         return out_data
 
@@ -224,7 +228,8 @@ def main():
                        ' 2 - если нужно получить информацию о петиции по ее URL  ')
 
         if in_com == '1':
-                get_all_last()
+                date_in = input('Введите дату созданные после которой петиции необходимо получить и Q если не интересует данный фильтр  ')
+                get_all_last(date_in)
         elif in_com == '2':
                 url_in = input('Введите URL петиции ')
                 search_by_url(url_in)
