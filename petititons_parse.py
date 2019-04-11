@@ -9,6 +9,70 @@ import sys
 import hashlib
 
 
+def get_all_last():
+        page_num = 1
+        url_last = 'https://www.petitions247.com/browse.php?page=' + str(
+                page_num) + '&order_by=petition_created&sort_order=desc'
+        response = requests.get(url_last)
+        pprint('Получили список ссылок на страницу {}'.format(page_num))
+        soup = BeautifulSoup(response.text, 'html.parser')
+        max_page_num = soup.find_all(class_='pagination flex-wrap')[0].text.split()[-2]
+        td_tags = str(soup.find_all('td'))
+        soup_sub = BeautifulSoup(td_tags, 'lxml')
+        petition_href_list = [[]]
+        for a in soup_sub.find_all('a', href=True):
+                petition_href_list[0].append(a['href'])
+        while page_num < int(max_page_num):
+                page_num += 1
+                response = requests.get('https://www.petitions247.com/browse.php?page=' + str(
+                        page_num) + '&order_by=petition_created&sort_order=desc')
+                pprint('Получили список ссылок на страницу {}'.format(page_num))
+                soup = BeautifulSoup(response.text, 'html.parser')
+                td_tags = str(soup.find_all('td'))
+                soup_sub = BeautifulSoup(td_tags, 'lxml')
+                sub_petition_href_list = []
+                for a in soup_sub.find_all('a', href=True):
+                        sub_petition_href_list.append(a['href'])  # получаем ссылки петиций
+                petition_href_list.append(sub_petition_href_list)
+        out_petition_href_list = list(
+                chain.from_iterable(petition_href_list))  # получили уникальную часть ссылок на петиции
+        href_list = []
+        for href in out_petition_href_list:
+                href_list.append('https://www.petitions247.com' + href)
+        data_list_petition = []
+        count = 0
+        for href in href_list:
+                try:
+                        data_list_petition.append(search_by_url(href))
+                        print('Распечатана петиция номер {}'.format(count))
+                except Exception as e:
+                        print('Петиция закрыта и не может быть распечатана')
+                count += 1
+        return data_list_petition
+
+
+
+def search_by_url(url_in):
+        data = {'page_view_id': '1',
+                'time_until_page_fully_loaded': '1409',
+                'authenticity_token': '5d2260b26c691988588e9295043b4237'
+                }
+
+        response = requests.get(url_in, data)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        id = search_for_id(soup)  # ID петиции
+        title = soup.title.get_text()  # заголовок петиции
+        full_text = soup.find_all(id='petition_text')[0].get_text().split('\n')  # полный текст петиции
+        author_name = search_for_author(soup)  # имя автора петиции
+        date = search_for_date(url_in)  # дата петиции
+        sign_count = seacrh_for_signs(soup)  # количество подписавших
+        author_id = get_author_id(url_in, author_name)
+        out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
+        pprint (out_data)
+        return out_data
+
+
 def search_for_date(url):  # функция которая ищет дату создания петиции по ее ID
         url_p_1 = url[0:29]
         url_p_2 = 'signatures/' + url[29:]
@@ -59,8 +123,8 @@ def exp_to_json(id_in, title_in, full_text_in, author_name_in, date_in, sign_cou
                     'Date': date_in,
                     'Number of signs': sign_count_in,
                     'Author ID': author_id_in}
-        with codecs.open('output.json', 'w', encoding='utf-8') as json_file:
-                json.dump(out_dict, json_file, ensure_ascii=False)
+        #with codecs.open('output.json', 'w', encoding='utf-8') as json_file:
+                #json.dump(out_dict, json_file, ensure_ascii=False)
         return out_dict
 
 
@@ -90,7 +154,7 @@ def get_author_id(url, author_name_in):
         return auth_id
 
 
-def get_votes(url, id):
+def get_votes(url):
         comment_list = []
         page_num = 1
         url_p_1 = url[:29]
@@ -149,40 +213,31 @@ def get_comments(votes_list):
                 key = item[0] + item[1] + item[4]
                 hash_line = hashlib.md5(key.encode('utf8'))
                 item.append(hash_line.hexdigest())
-        with open('comments.json', 'w', encoding='utf8') as json_file:
-                json.dump(comments_out, json_file, ensure_ascii=False)
+        #with open('comments.json', 'w', encoding='utf8') as json_file:
+                #json.dump(comments_out, json_file, ensure_ascii=False)
         return comments_out
 
 
 def main():
-        URL = input('Введите URL петиции ')
-        data = {'page_view_id': '1',
-                'time_until_page_fully_loaded': '1409',
-                'authenticity_token': '5d2260b26c691988588e9295043b4237'
-                }
+        in_com = input('Введите:'
+                       ' 1 - если нужно получить информацию о последних \n созданных петициях'
+                       ' 2 - если нужно получить информацию о петиции по ее URL  ')
 
-        response = requests.get(URL, data)
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        id = search_for_id(soup)  # ID петиции
-        title = soup.title.get_text()  # заголовок петиции
-        full_text = soup.find_all(id='petition_text')[0].get_text().split('\n')  # полный текст петиции
-        author_name = search_for_author(soup)  # имя автора петиции
-        date = search_for_date(URL)  # дата петиции
-        sign_count = seacrh_for_signs(soup)  # количество подписавших
-        author_id = get_author_id(URL, author_name)
-        out_data = exp_to_json(id, title, full_text, author_name, date, sign_count, author_id)
-        pprint (out_data)
-
-        in_com = input('Если необходимо собрать комментарии к петиции и список проголосовавших нажмите Y, если нет - Q  ')
-        if in_com =='Y':
-                voted_list = get_votes(URL, id)  # проголосовавшие
-                comments = get_comments(voted_list)  # комментарии к петиции
-                pprint(comments)
-        elif in_com =='Q':
-                sys.exit(0)
-        else:
-                print('Вы ввели неверную команду')
+        if in_com == '1':
+                get_all_last()
+        elif in_com == '2':
+                url_in = input('Введите URL петиции ')
+                search_by_url(url_in)
+                in_com = input(
+                        'Если необходимо собрать комментарии к петиции и список проголосовавших нажмите Y, если нет - Q  ')
+                if in_com == 'Y':
+                        voted_list = get_votes(url_in)  # проголосовавшие
+                        comments = get_comments(voted_list)  # комментарии к петиции
+                        pprint(comments)
+                elif in_com == 'Q':
+                        sys.exit(0)
+                else:
+                        print('Вы ввели неверную команду')
 
 
 if __name__ == "__main__":
