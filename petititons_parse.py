@@ -56,8 +56,6 @@ def get_all_last(date_date_in, n_in):
         return data_list_petition
 
 
-
-
 def search_by_url(url_in):
         data = {'page_view_id': '1',
                 'time_until_page_fully_loaded': '1409',
