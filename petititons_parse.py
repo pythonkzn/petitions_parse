@@ -9,7 +9,7 @@ import sys
 import hashlib
 
 
-def get_all_last(date_date_in):
+def get_all_last(date_date_in, n_in):
         page_num = 1
         url_last = 'https://www.petitions247.com/browse.php?page=' + str(
                 page_num) + '&order_by=petition_created&sort_order=desc'
@@ -24,6 +24,9 @@ def get_all_last(date_date_in):
                 petition_href_list[0].append(a['href'])
         while page_num < int(max_page_num):
                 page_num += 1
+                if n_in != 'Q':
+                        if int(n_in) < page_num:
+                                break
                 response = requests.get('https://www.petitions247.com/browse.php?page=' + str(
                         page_num) + '&order_by=petition_created&sort_order=desc')
                 pprint('Получили список ссылок на страницу {}'.format(page_num))
@@ -229,7 +232,8 @@ def main():
 
         if in_com == '1':
                 date_in = input('Введите минимальную дату создания запрашиваемых петиций и Q если не интересует данный фильтр  ')
-                get_all_last(date_in)
+                n = input('Введите по скольким страницам выгрузить последние петиции и Q если не интересует данный фильтр  ')
+                get_all_last(date_in, n)
         elif in_com == '2':
                 url_in = input('Введите URL петиции ')
                 search_by_url(url_in)
