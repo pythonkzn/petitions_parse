@@ -175,7 +175,9 @@ def get_votes(url):
         i = 0  # счетчик строк
         j = 0  # счетчик ячеек в строке
         y = 0  # счетчик общего количества ячеек
-        if len(td_tag) == '50':
+        f = len(td_tag)
+        if len(td_tag) == 50:
+                flag = True
                 while y <= (len(td_tag)-1):
                      if (y > 0) and (y % 5 == 0):
                              i += 1
@@ -184,6 +186,7 @@ def get_votes(url):
                      y += 1
                 comment_list.append(output_list)
         else:
+                flag = False
                 while y <= (len(td_tag)-1):
                      if (y > 0) and (y % 4 == 0):
                              i += 1
@@ -206,7 +209,8 @@ def get_votes(url):
                 i = 0  # счетчик строк
                 j = 0  # счетчик ячеек в строке
                 y = 0  # счетчик общего количества ячеек
-                if len(td_tag) == '50':
+                f = len(td_tag)
+                if flag:
                         while y <= (len(td_tag) - 1):
                                 if (y > 0) and (y % 5 == 0):
                                         i += 1
