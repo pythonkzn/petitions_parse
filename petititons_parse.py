@@ -41,6 +41,8 @@ def get_all_last(date_date_in, n_in):
                 href_list.append('https://www.petitions247.com' + href)
         data_list_petition = []
         count = 0
+        if n_in == 'Q':
+                n_in = 399
         for href in href_list:
                 try:
                         data_list_petition.append(search_by_url(href))
