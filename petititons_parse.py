@@ -175,13 +175,22 @@ def get_votes(url):
         i = 0  # счетчик строк
         j = 0  # счетчик ячеек в строке
         y = 0  # счетчик общего количества ячеек
-        while y <= (len(td_tag)-1):
-             if (y > 0) and (y % 5 == 0):
-                     i += 1
-                     output_list.append([])
-             output_list[i].append(td_tag[y].text)
-             y += 1
-        comment_list.append(output_list)
+        if len(td_tag) == '50':
+                while y <= (len(td_tag)-1):
+                     if (y > 0) and (y % 5 == 0):
+                             i += 1
+                             output_list.append([])
+                     output_list[i].append(td_tag[y].text)
+                     y += 1
+                comment_list.append(output_list)
+        else:
+                while y <= (len(td_tag)-1):
+                     if (y > 0) and (y % 4 == 0):
+                             i += 1
+                             output_list.append([])
+                     output_list[i].append(td_tag[y].text)
+                     y += 1
+                comment_list.append(output_list)
         while page_num < int(max_page_num):
                 page_num += 1
                 url_p_1 = url[:29]
@@ -197,13 +206,22 @@ def get_votes(url):
                 i = 0  # счетчик строк
                 j = 0  # счетчик ячеек в строке
                 y = 0  # счетчик общего количества ячеек
-                while y <= (len(td_tag) - 1):
-                        if (y > 0) and (y % 5 == 0):
-                                i += 1
-                                output_list.append([])
-                        output_list[i].append(td_tag[y].text)
-                        y += 1
-                comment_list.append(output_list)
+                if len(td_tag) == '50':
+                        while y <= (len(td_tag) - 1):
+                                if (y > 0) and (y % 5 == 0):
+                                        i += 1
+                                        output_list.append([])
+                                output_list[i].append(td_tag[y].text)
+                                y += 1
+                        comment_list.append(output_list)
+                else:
+                        while y <= (len(td_tag) - 1):
+                                if (y > 0) and (y % 4 == 0):
+                                        i += 1
+                                        output_list.append([])
+                                output_list[i].append(td_tag[y].text)
+                                y += 1
+                        comment_list.append(output_list)
         comment_list = list(chain.from_iterable(comment_list))
         return comment_list
 
@@ -211,12 +229,20 @@ def get_votes(url):
 def get_comments(votes_list):
         comments_out = []
         for item in votes_list:
-                if item[3] != '':
-                        comments_out.append(item)
-                item[2] = item[2].strip()
-                key = item[0] + item[1] + item[4]
-                hash_line = hashlib.md5(key.encode('utf8'))
-                item.append(hash_line.hexdigest())
+                if len(item) == '5':
+                        if item[3] != '':
+                                comments_out.append(item)
+                        item[2] = item[2].strip()
+                        key = item[0] + item[1] + item[4]
+                        hash_line = hashlib.md5(key.encode('utf8'))
+                        item.append(hash_line.hexdigest())
+                else:
+                        if item[2] != '':
+                                comments_out.append(item)
+                        item[1] = item[1].strip()
+                        key = item[0] + item[1] + item[3]
+                        hash_line = hashlib.md5(key.encode('utf8'))
+                        item.append(hash_line.hexdigest())
         #with open('comments.json', 'w', encoding='utf8') as json_file:
                 #json.dump(comments_out, json_file, ensure_ascii=False)
         return comments_out
