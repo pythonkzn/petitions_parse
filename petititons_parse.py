@@ -233,18 +233,11 @@ def get_votes(url):
 def get_comments(votes_list):
         comments_out = []
         for item in votes_list:
-                if len(item) == '5':
+                if len(item) == 5:
                         if item[3] != '':
                                 comments_out.append(item)
                         item[2] = item[2].strip()
                         key = item[0] + item[1] + item[4]
-                        hash_line = hashlib.md5(key.encode('utf8'))
-                        item.append(hash_line.hexdigest())
-                else:
-                        if item[2] != '':
-                                comments_out.append(item)
-                        item[1] = item[1].strip()
-                        key = item[0] + item[1] + item[3]
                         hash_line = hashlib.md5(key.encode('utf8'))
                         item.append(hash_line.hexdigest())
         #with open('comments.json', 'w', encoding='utf8') as json_file:
